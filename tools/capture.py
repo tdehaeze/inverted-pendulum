@@ -19,8 +19,7 @@ import sys
 import time
 
 import matplotlib
-if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
-    matplotlib.use("Agg")   # no display available — save PNG only
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import serial
 
@@ -104,11 +103,8 @@ def plot_and_save(rows: list, csv_path: str):
     png_path = os.path.join("figs", basename + ".png")
     os.makedirs("figs", exist_ok=True)
     fig.savefig(png_path, dpi=150)
+    plt.close(fig)
     print(f"Plot saved → {png_path}")
-    try:
-        plt.show()
-    except Exception:
-        pass  # no display available — PNG already saved
 
 
 def main():
