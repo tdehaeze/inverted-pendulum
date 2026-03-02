@@ -23,9 +23,8 @@ class PendulumParameters:
 
     def __post_init__(self):
         if self.I is None:
-            # uniform rod: I_com = 1/12 * m * l^2
-            self.I = (1/12) * self.m * self.l**2
-
+            # uniform rod: I_com = 1/12 * m * (2*l)^2
+            self.I = (1/12) * self.m * (2*self.l)**2
 
 # ==========================================================
 # PLANT
