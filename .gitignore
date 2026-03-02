@@ -1,0 +1,12 @@
+# Python virtual environments
+.venv/
+
+# Generated figures
+figs/
+
+# PlatformIO
+teensy/.pio/
+
+# Python cache
+__pycache__/
+*.pyc
