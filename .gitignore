@@ -1,8 +1,9 @@
 # Python virtual environments
 .venv/
 
-# Generated figures
+# Generated figures and recorded data
 figs/
+data/
 
 # PlatformIO
 teensy/.pio/
