@@ -14,17 +14,17 @@ import control as ctl
 @dataclass
 class PendulumParameters:
     m: float = 0.2        # pendulum mass [kg]
-    l: float = 0.2        # CoM distance [m]
-    I: float = None       # inertia about pivot [kg*m^2]
+    l: float = 0.2        # pivot-to-CoM distance (half total length) [m]
+    I: float = None       # inertia about CoM [kg*m^2]
     g: float = 9.81
-    c: float = 0.02       # viscous damping [1/s]
+    c: float = 0.02       # angular damping coefficient [N*m*s/rad]
     a_max: float = 20.0
     v_max: float = 1.0
 
     def __post_init__(self):
         if self.I is None:
-            # default: point mass
-            self.I = self.m * self.l**2
+            # uniform rod: I_com = 1/12 * m * l^2
+            self.I = (1/12) * self.m * self.l**2
 
 
 # ==========================================================
@@ -38,50 +38,47 @@ class InvertedPendulumPlant:
 
     """ Non-linear dynamics.
     Used to simulate the inverted pendulum.
-    Input is the cart acceleration a. """
-    def dynamics(self, state, a):
+    Input u is the cart linear acceleration (x_dot_dot).
+    Equation: (I + m*l^2)*theta_ddot + c*theta_dot + m*g*l*sin(theta) = -m*l*u*cos(theta) """
+    def dynamics(self, state, u):
         # States are:
-        # x: cart position
-        # v: carte velocity
-        # theta: pendulum angle (0 degree corresponds to upward position)
-        # omega: pendulum angular velocity
+        # x:     cart position [m]
+        # v:     cart velocity [m/s]
+        # theta: pendulum angle [rad]  (theta=0: downward, theta=pi: upright)
+        # omega: pendulum angular velocity [rad/s]
         x, v, theta, omega = state
         p = self.p
 
-        # Saturate acceleration
-        # a = np.clip(a, -p.a_max, p.a_max)
+        dxdt     = v
+        dvdt     = u
+        dthetadt = omega
 
-        # Computes states at next time step
-        dxdt = v # Change of position of the cart
-        dvdt = a # Change of velocity of the cart
-        dthetadt = omega # Angular change of the pendulum
-
-        # Change of angular velocity of the pendulum
-        domegadt = (
-            (p.m * p.g * p.l / p.I) * np.sin(theta)
-            - (p.m * p.l / p.I) * a * np.cos(theta)
-            - p.c * omega
-        )
+        D = p.I + p.m * p.l**2  # effective inertia about pivot
+        domegadt = (-p.c * omega - p.m * p.g * p.l * np.sin(theta) - p.m * p.l * u * np.cos(theta)) / D
 
         return np.array([dxdt, dvdt, dthetadt, domegadt])
 
-    """ Linearization around upright theta=0.
-    Returns the A,B,C,D matrices of the (linear) state space model. """
+    """ Linearization around the upright position (phi = 0, where phi = theta - pi).
+    Equation: (I + m*l^2)*phi_ddot + c*phi_dot - m*g*l*phi = m*l*u
+    States: [x, x_dot, phi, phi_dot]
+    Returns the A, B, C, D matrices of the linear state space model. """
     def linear_matrices(self):
         p = self.p
+
+        D = p.I + p.m * p.l**2  # effective inertia about pivot
 
         A = np.array([
             [0, 1, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 1],
-            [0, 0, (p.m * p.g * p.l) / p.I, -p.c]
+            [0, 0, (p.m * p.g * p.l) / D, -p.c / D]
         ])
 
         B = np.array([
             [0],
             [1],
             [0],
-            [-(p.m * p.l) / p.I]
+            [(p.m * p.l) / D]
         ])
 
         C = np.array([
@@ -157,13 +154,12 @@ class PIDController:
         self.dt = dt
 
     def __call__(self, t, state):
-        # Angle Error and derivative of the angle error
-        theta = -state[2]
-        omega = -state[3]
+        phi     = state[2] - np.pi  # deviation from upright
+        phi_dot = state[3]
 
-        self.integral += theta * self.dt
+        self.integral += phi * self.dt
 
-        return self.Kp*theta + self.Kd*omega + self.Ki*self.integral
+        return self.Kp*phi + self.Kd*phi_dot + self.Ki*self.integral
 
 
 class LQRController:
@@ -174,7 +170,9 @@ class LQRController:
         self.K = np.linalg.inv(R) @ B.T @ P
 
     def __call__(self, t, state):
-        return float(-self.K @ state)
+        phi_state = state.copy()
+        phi_state[2] = state[2] - np.pi  # phi = theta - pi
+        return float(-self.K @ phi_state)
 
 
 # ==========================================================
@@ -204,7 +202,7 @@ def animate(t, history, params):
         cart_patch.set_xy((cart_x - cart_width/2, -cart_height/2))
 
         px = cart_x + params.l * np.sin(theta[i])
-        py = params.l * np.cos(theta[i])
+        py = -params.l * np.cos(theta[i])
 
         pend_line.set_data([cart_x, px], [0, py])
 
@@ -215,46 +213,66 @@ def animate(t, history, params):
 
 
 def plot_snapshots(t, history, params, times):
-    """Display the cart and pendulum at several time instants in a single figure."""
-    x = history[:, 0]
-    theta = history[:, 2]
-
-    n = len(times)
-    fig, axes = plt.subplots(1, n, figsize=(2.5 * n, 3))
-    if n == 1:
-        axes = [axes]
+    """Display cart and pendulum at several time instants on a shared figure.
+    The horizontal axis corresponds to the physical cart position x.
+    Snapshots at the same position are superimposed."""
+    x_hist = history[:, 0]
+    theta_hist = history[:, 2]
 
     cart_width = 0.1
     cart_height = 0.05
-    margin = params.l + 0.1
 
-    for ax, time in zip(axes, times):
-        idx = np.argmin(np.abs(t - time))
-        cart_x = x[idx]
-        th = theta[idx]
+    indices  = [np.argmin(np.abs(t - time)) for time in times]
+    cart_xs  = [x_hist[i] for i in indices]
 
-        # Track
-        ax.axhline(-cart_height / 2, color='gray', lw=1)
+    # x range: actual cart travel + one pendulum length of margin on each side
+    x_lo = min(cart_xs) - params.l - cart_width
+    x_hi = max(cart_xs) + params.l + cart_width
+    if x_hi - x_lo < 4 * params.l:          # ensure minimum width
+        x_mid = (x_lo + x_hi) / 2
+        x_lo, x_hi = x_mid - 2 * params.l, x_mid + 2 * params.l
+
+    y_lo = -(cart_height / 2 + 0.12)        # room for time labels
+    y_hi = params.l + 0.05
+
+    # Size the figure so the aspect ratio is physically correct
+    y_span = y_hi - y_lo
+    x_span = x_hi - x_lo
+    fig_h  = 3.5
+    fig_w  = fig_h * x_span / y_span + 0.8  # +0.8 for margins
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+
+    colors = plt.cm.plasma(np.linspace(0.1, 0.9, len(times)))
+
+    # Track
+    ax.axhline(-cart_height / 2, color='gray', lw=1, zorder=0)
+
+    for color, time, idx, cart_x in zip(colors, times, indices, cart_xs):
+        th = theta_hist[idx]
 
         # Cart
         ax.add_patch(plt.Rectangle(
             (cart_x - cart_width / 2, -cart_height / 2),
             cart_width, cart_height,
-            color='steelblue'
+            color=color, alpha=0.85, zorder=2
         ))
 
         # Pendulum rod
         px = cart_x + params.l * np.sin(th)
-        py = params.l * np.cos(th)
-        ax.plot([cart_x, px], [0, py], 'k-', lw=2)
+        py = -params.l * np.cos(th)
+        ax.plot([cart_x, px], [0, py], '-', color=color, lw=2, zorder=3)
 
-        ax.set_xlim(cart_x - margin, cart_x + margin)
-        ax.set_ylim(-margin, margin)
-        ax.set_aspect('equal')
-        ax.set_xlabel(f"t = {time:.2f} s")
-        ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
-        for spine in ax.spines.values():
-            spine.set_visible(False)
+        # Time label just below the cart
+        ax.text(cart_x, -cart_height / 2 - 0.01, f"t = {time:.2f} s",
+                ha='center', va='top', fontsize=8, color=color)
+
+    ax.set_xlim(x_lo, x_hi)
+    ax.set_ylim(y_lo, y_hi)
+    ax.set_aspect('equal')
+    ax.set_xlabel("x [m]")
+    ax.tick_params(left=False, labelleft=False)
+    for spine in ['left', 'top', 'right']:
+        ax.spines[spine].set_visible(False)
 
     fig.tight_layout()
     return fig
@@ -271,12 +289,12 @@ if __name__ == "__main__":
     plant = InvertedPendulumPlant(params)
     sim = Simulator(plant, dt=dt)
 
-    # Initial states
-    x0 = np.array([0.0, 0.0, np.deg2rad(5), 0.0])
+    # Initial states: pendulum 5° from upright (theta = pi + 5°)
+    x0 = np.array([0.0, 0.0, np.pi + np.deg2rad(5), 0.0])
 
     # --- choose controller ---
     # controller = lambda t,x: 0
-    controller = PIDController(Kp=-100, Kd=-10, dt=dt)
+    controller = PIDController(Kp=-100, Kd=-10, dt=dt)  # negative gains: u opposes phi
 
     # For LQR:
     # Q = np.diag([1, 1, 100, 10])
@@ -325,8 +343,8 @@ if __name__ == "__main__":
     fig.savefig("figs/cart_velocity.png")
 
     fig = plt.figure()
-    plt.plot(t, np.rad2deg(hist[:,2]))
-    plt.ylabel("Pendulum angle [deg]")
+    plt.plot(t, np.rad2deg(hist[:,2] - np.pi))
+    plt.ylabel("Pendulum angle phi [deg]")
     plt.xlabel("Time [s]")
     plt.grid()
     fig.savefig("figs/pendulum_angle.png")
