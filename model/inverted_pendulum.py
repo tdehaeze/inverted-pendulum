@@ -282,71 +282,52 @@ def plot_snapshots(t, history, params, times):
 # ==========================================================
 
 if __name__ == "__main__":
-    dt = 0.001
-
-    params = PendulumParameters(m=0.3, l=0.25, c=0.1)
-    plant = InvertedPendulumPlant(params)
-    sim = Simulator(plant, dt=dt)
-
-    # Initial states: pendulum 5° from upright (theta = pi + 5°)
-    x0 = np.array([0.0, 0.0, np.pi + np.deg2rad(5), 0.0])
-
-    # --- choose controller ---
-    # controller = lambda t,x: 0
-    controller = PIDController(Kp=-100, Kd=-10, dt=dt)  # negative gains: u opposes phi
-
-    # For LQR:
-    # Q = np.diag([1, 1, 100, 10])
-    # R = np.array([[1]])
-    # controller = LQRController(plant, Q, R)
-
     import os
+    dt = 0.001
     os.makedirs("figs", exist_ok=True)
 
-    t, hist, u = sim.simulate(controller, x0, T=10)
+    # Fitted parameters from free-response measurement
+    params = PendulumParameters(m=0.03, l=0.15, c=0.00032)
+    plant  = InvertedPendulumPlant(params)
+    sim    = Simulator(plant, dt=dt)
 
-    # Frequency Analysis
-    # A, B, C, D = plant.linear_matrices()
-    # # output = theta
-    # C_theta = C[2,:]
-    # D_theta = D[2,:]
-    # # Linear plant
-    # G = ctl.ss(A, B, C_theta, D_theta)
+    # Critical proportional gain (stability threshold)
+    # Derived from Routh-Hurwitz on linearised closed-loop:
+    #   kp_crit = c² / (4·m·l·(I + m·l²)) + g
+    m, l, c = params.m, params.l, params.c
+    D       = params.I + m * l**2
+    kp_crit = c**2 / (4 * m * l * D) + params.g
+    print(f"kp_critical = {kp_crit:.4f}")
 
-    # ctl.bode_plot(G, omega=2*np.pi*np.logspace(-1, 3, 1000), Hz=True, deg=True)
-    # plt.savefig("figs/bode_plant.png")
+    # Initial state: 5° from upright
+    x0 = np.array([0.0, 0.0, np.pi + np.deg2rad(5), 0.0])
 
-    # # PID
-    # s = ctl.tf('s')
-    # Kp = -100
-    # Kd = -10
-    # Ki = 0
-    # K = Kp + Ki/s + Kd*s
+    for name, kp in [("kp_below", 0.8 * kp_crit),
+                     ("kp_above", 1.2 * kp_crit)]:
 
-    # L = K*G
-    # ctl.bode_plot(L, omega=2*np.pi*np.logspace(-1, 3, 1000), Hz=True, deg=True)
-    # plt.savefig("figs/bode_loop.png")
+        print(f"{name}: kp = {kp:.4f}")
+        controller = PIDController(Kp=-kp, Kd=0, Ki=0, dt=dt)
+        t, hist, u_hist = sim.simulate(controller, x0, T=10)
 
-    fig = plt.figure()
-    plt.plot(t, hist[:,0]*1000)
-    plt.ylabel("Cart position [mm]")
-    plt.xlabel("Time [s]")
-    plt.grid()
-    fig.savefig("figs/cart_position.png")
+        phi_deg  = np.rad2deg(hist[:, 2] - np.pi)
+        cart_mm  = hist[:, 0] * 1000
 
-    fig = plt.figure()
-    plt.plot(t, hist[:,1]*1000)
-    plt.ylabel("Cart Velocity [mm/s]")
-    plt.xlabel("Time [s]")
-    plt.grid()
-    fig.savefig("figs/cart_velocity.png")
+        fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
 
-    fig = plt.figure()
-    plt.plot(t, np.rad2deg(hist[:,2] - np.pi))
-    plt.ylabel("Pendulum angle phi [deg]")
-    plt.xlabel("Time [s]")
-    plt.grid()
-    fig.savefig("figs/pendulum_angle.png")
+        axes[0].plot(t, phi_deg)
+        axes[0].axhline(0, color='k', lw=0.5, ls='--')
+        axes[0].set_ylabel("Pendulum angle φ [deg]")
+        axes[0].set_title(f"P controller — kp = {kp:.3f}  "
+                          f"({'below' if 'below' in name else 'above'} "
+                          f"critical = {kp_crit:.3f})")
+        axes[0].grid(True)
 
-    fig = plot_snapshots(t, hist, params, times=[0, 0.5, 1.0, 2.0, 5.0])
-    fig.savefig("figs/snapshots.png")
+        axes[1].plot(t, cart_mm)
+        axes[1].set_ylabel("Cart position [mm]")
+        axes[1].set_xlabel("Time [s]")
+        axes[1].grid(True)
+
+        fig.tight_layout()
+        fig.savefig(f"figs/{name}.png", dpi=150)
+        plt.close(fig)
+        print(f"  saved figs/{name}.png")
