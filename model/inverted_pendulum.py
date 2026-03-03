@@ -331,3 +331,34 @@ if __name__ == "__main__":
         fig.savefig(f"figs/{name}.png", dpi=150)
         plt.close(fig)
         print(f"  saved figs/{name}.png")
+
+    # PD controller: kp = 1.2*kp_crit, kd chosen for critical damping
+    # From b² = 4·a·k on the closed-loop characteristic equation:
+    #   kd = 1/(m·l) · (2·sqrt(m·l·kp - m·g·l)·sqrt(I + m·l²) - c)
+    kp = 1.2 * kp_crit
+    kd = (1 / (m * l)) * (2 * np.sqrt(m * l * kp - m * params.g * l) * np.sqrt(D) - c)
+    print(f"kp_kd: kp = {kp:.4f}, kd = {kd:.4f}")
+
+    controller = PIDController(Kp=-kp, Kd=-kd, Ki=0, dt=dt)
+    t, hist, u_hist = sim.simulate(controller, x0, T=10)
+
+    phi_deg = np.rad2deg(hist[:, 2] - np.pi)
+    cart_mm = hist[:, 0] * 1000
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+
+    axes[0].plot(t, phi_deg)
+    axes[0].axhline(0, color='k', lw=0.5, ls='--')
+    axes[0].set_ylabel("Pendulum angle φ [deg]")
+    axes[0].set_title(f"PD controller — kp = {kp:.3f}, kd = {kd:.3f}  (critically damped)")
+    axes[0].grid(True)
+
+    axes[1].plot(t, cart_mm)
+    axes[1].set_ylabel("Cart position [mm]")
+    axes[1].set_xlabel("Time [s]")
+    axes[1].grid(True)
+
+    fig.tight_layout()
+    fig.savefig("figs/kp_kd.png", dpi=150)
+    plt.close(fig)
+    print("  saved figs/kp_kd.png")
