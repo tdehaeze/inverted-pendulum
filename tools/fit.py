@@ -141,13 +141,11 @@ def main():
     w_d_meas = 2 * np.pi / np.mean(np.diff(t_full[peaks if args.t_start is None
                                                    else find_peaks(theta_full,
                                                    height=np.deg2rad(5))[0]]))
-    zeta = c_fit / (2 * D * w_n)
 
     print(f"\nFitted parameters:")
     print(f"  l   = {l_fit * 100:.2f} cm")
     print(f"  c   = {c_fit:.5f} N·m·s/rad")
     print(f"  ω_n = {w_n:.3f} rad/s  ({w_n / (2*np.pi):.3f} Hz)")
-    print(f"  ζ   = {zeta:.4f}")
     print(f"  RMS error = {np.sqrt(final_cost):.4f} rad ({np.rad2deg(np.sqrt(final_cost)):.2f}°)")
 
     # ---- Simulate with fitted params ----
@@ -155,10 +153,10 @@ def main():
 
     # ---- Plot ----
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(t, np.rad2deg(theta), lw=0.8, color="steelblue", label="Measured")
+    ax.plot(t, np.rad2deg(theta), lw=0.8, color="steelblue", label="Mesuré")
     ax.plot(t, np.rad2deg(theta_fit), lw=1.5, ls="--", color="tomato",
-            label=f"Fitted  l={l_fit*100:.1f} cm, c={c_fit:.4f}, ζ={zeta:.3f}")
-    ax.set_xlabel("Time [s]")
+            label=f"Modèle ajusté  l={l_fit*100:.1f} cm, c={c_fit:.4f}")
+    ax.set_xlabel("Temps [s]")
     ax.set_ylabel("Angle [deg]")
     ax.legend()
     ax.grid(True)

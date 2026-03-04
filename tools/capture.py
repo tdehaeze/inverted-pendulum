@@ -24,12 +24,14 @@ import matplotlib.pyplot as plt
 import serial
 
 # ---- Packet format (must match firmware struct Sample) ----
-# uint16 header | uint32 t_us | float angle_deg | float cart_mm | float cart_vel | uint8 feedback
-PACKET_FMT  = "<H I f f f B"
-PACKET_SIZE = struct.calcsize(PACKET_FMT)   # 19 bytes
+# header(2) t_us(4) angle_deg(4) pend_vel_deg_s(4)
+# cart_mm(4) cart_vel_mm_s(4) accel_mm_s2(4) feedback(1) = 27 bytes
+PACKET_FMT  = "<H I f f f f f B"
+PACKET_SIZE = struct.calcsize(PACKET_FMT)   # 27 bytes
 HEADER      = bytes([0x55, 0xAA])           # 0xAA55 little-endian
 
-CSV_COLUMNS = ["t_us", "t_s", "angle_deg", "cart_mm", "cart_vel_mm_s", "feedback_on"]
+CSV_COLUMNS = ["t_us", "t_s", "angle_deg", "pend_vel_deg_s",
+               "cart_mm", "cart_vel_mm_s", "accel_mm_s2", "feedback_on"]
 
 
 def read_packet(ser: serial.Serial):
@@ -63,8 +65,8 @@ def capture(ser: serial.Serial, duration: float) -> list:
             pkt = read_packet(ser)
             if pkt is None:
                 continue
-            _, t_us, angle_deg, cart_mm, cart_vel, feedback = pkt
-            rows.append([t_us, t_us / 1e6, angle_deg, cart_mm, cart_vel, int(feedback)])
+            _, t_us, angle_deg, pend_vel, cart_mm, cart_vel, accel, feedback = pkt
+            rows.append([t_us, t_us / 1e6, angle_deg, pend_vel, cart_mm, cart_vel, accel, int(feedback)])
 
             now = time.monotonic()
             if now - last_print >= 1.0:
