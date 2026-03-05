@@ -1,0 +1,14 @@
+% Ce fichier contient toutes les macros que vous pouvez avoir envie de définir 
+% si vous les utilisez plusieurs fois dans le document.
+
+\PassOptionsToPackage{svgnames}{color}
+
+% Un environnement pour bien présenter le code informatique
+\newenvironment{code}{%
+\begin{mdframed}[linecolor=green,innerrightmargin=30pt,innerleftmargin=30pt,
+backgroundcolor=black!5,
+skipabove=10pt,skipbelow=10pt,roundcorner=5pt,
+splitbottomskip=6pt,splittopskip=12pt]
+}{%
+\end{mdframed}
+}

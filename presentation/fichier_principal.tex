@@ -1,0 +1,49 @@
+% On découpe ce document complexe en plusieurs sous-fichiers séparés.
+% Cela permettra notamment de réarranger les transparents facilement 
+% lors de l'élaboration du document.
+
+% La définition de la classe beamer avec tous les styles afférents
+
+\documentclass[9pt]{beamer}
+
+\input{preambule/special_beamer.tex}
+
+% Les autres packages utiles  notamment pour le français, les accents ou Python
+\input{preambule/autres_packages.tex}
+% Les macros et raccourcis personnels
+\input{preambule/macros.tex}
+
+% On définit le titre et l'auteur du document
+
+% L'argument optionnel (entre crochets) donne le titre qui sera mis sur chaque slide
+\title[TIPE Pendule Inversé]{Stabilisation active de systèmes en équilibre instable: du pendule aux lanceurs réutilisables}
+\author{Thibaut \textsc{Dehaeze}} % Votre nom
+% L'épreuve (car on n'a pas le droit de signaler sa provenance à un concours) (là encore, l'argument optionnel apparaît sur chaque slide)
+\institute[TIPE]{Épreuve de TIPE}
+\date{Session 2026}
+
+% On démarre le document proprement dit
+\begin{document}
+
+\begin{frame}
+\titlepage 
+\end{frame}
+
+% La première grande partie: introduction du sujet
+\input{slides/1_introduction.tex}
+
+% La 2e partie: Etude de la dynamique
+\input{slides/2_dynamique.tex}
+
+% La 3e partie: Controle par PID
+\input{slides/3_control_pid.tex}
+
+% La 4e partie: Controle par LQR
+\input{slides/4_control_lqr.tex}
+
+% Conclusion
+\input{slides/5_conclusion.tex}
+
+\end{document}
+
+

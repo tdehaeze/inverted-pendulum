@@ -1,0 +1,40 @@
+\usepackage{url}            % Pour citer les adresses web
+\usepackage[T1]{fontenc}    % Encodage des accents
+\usepackage[utf8]{inputenc} % Lui aussi
+\usepackage[french]{babel}  % Pour la traduction française
+\usepackage{numprint}       % Histoire que les chiffres soient bien
+
+\usepackage{amsmath}        % La base pour les maths
+\usepackage{mathrsfs}       % Quelques symboles supplémentaires
+\usepackage{amssymb}        % encore des symboles.
+\usepackage{amsfonts}       % Des fontes, eg pour \mathbb.
+
+\usepackage{cancel}
+
+\usepackage{caption}
+\captionsetup[figure]{
+  labelformat=simple,       % affiche juste le numéro
+  labelsep=period,          % séparateur point
+  name=Fig.,                % remplace "Figure" par "Fig."
+  font=scriptsize,          % texte très petit (ou "tiny" encore plus petit)
+  skip=2pt                  % espace minimal entre figure et caption
+}
+
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+%\usepackage[svgnames]{xcolor} % De la couleur
+
+%%% Si jamais vous voulez changer de police: décommentez les trois 
+%\usepackage{tgpagella}
+%\usepackage{tgadventor}
+%\usepackage{inconsolata}
+
+
+\usepackage{graphicx} % inclusion des graphiques
+\usepackage{wrapfig}  % Dessins dans le texte.
+
+\usepackage{tikz}     % Un package pour les dessins (utilisé pour l'environnement {code})
+\usetikzlibrary{calc, patterns, arrows.meta, positioning}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{tcolorbox}

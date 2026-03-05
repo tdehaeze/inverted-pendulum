@@ -1,0 +1,46 @@
+\begin{frame}[fragile]
+\frametitle{Exemples}
+\framesubtitle{Apparition d'une équation en plusieurs temps}
+
+L'idée est d'utiliser \verb|\onslide| pour faire apparaître les morceaux uns à 
+uns. Cela correspond à des bascules qui imposent le comportement de tout ce qui 
+suit jusqu'au prochain \verb|\onslide|. Par exemple, avec votre vieil ami 
+l'oscillateur harmonique
+
+$$
+\onslide<3>
+	1\times
+\onslide<2->
+	\frac{\dd^2\theta}{\dd t^2} + 
+\onslide<4>
+	\overbrace{
+\onslide<2-> 
+	\frac{g}{\ell}
+\onslide<4>
+	}^{={\omega_0}^2}
+\onslide<2-> 
+	\times\theta
+	=
+\onslide<5>
+	\overbrace{
+\onslide<2-> 
+	A
+\onslide<5>
+	}^{=\theta\e{éq}\times{\omega_0}^2}
+\onslide<2-> 
+$$
+
+\onslide<6->
+Le mieux est d'écrire l'équation voulue en une fois avec tous les rajouts et de découper ensuite. Par exemple ici, ce serait
+
+\onslide<7->
+$$
+	1\times
+	\frac{\dd^2\theta}{\dd t^2} + 
+	\overbrace{  	\frac{g}{\ell}  	}^{={\omega_0}^2}
+	\times\theta	=
+	\overbrace{	A	}^{=\theta\e{éq}\times{\omega_0}^2}
+$$
+
+
+\end{frame}

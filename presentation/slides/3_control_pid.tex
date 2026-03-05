@@ -1,0 +1,114 @@
+% Le titre de la partie
+\section{Stabilisation de la dynamique par contrôle PD}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+\frametitle{Contrôle PD}
+\framesubtitle{Schéma block du contrôle du pendule inversé}
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth, auto,
+    block/.style={draw, rectangle, rounded corners=3pt, fill=blue!8,
+                  minimum height=1.0cm, minimum width=2.2cm,
+                  align=center, font=\small},
+    sum/.style  ={draw, circle, minimum size=0.65cm, inner sep=0pt},
+    node distance=0pt
+  ]
+
+  % Nodes
+  \node[sum] (sum) {};
+  \node[block, right=1.2cm of sum] (pd)    {Contrôleur\\PD};
+  \node[block, right=1.8cm of pd]  (plant) {Pendule\\inversé};
+
+  % Summing junction +/-
+  \node[font=\footnotesize, below left=2pt and 2pt of sum] {$-$};
+
+  % Input: theta_ref
+  \draw[->] (sum.west) ++(-1.5,0) node[above right] {$\theta_\mathrm{ref} = \pi$} -- (sum.west);
+
+  % sum -> PD
+    \draw[->] (sum.east) -- node[midway, above] {$\varepsilon_\theta(t)$} (pd.west);
+
+  % PD -> plant
+    \draw[->] (pd.east) -- node[midway, above] {$u(t) = \ddot{x}(t)$} (plant.west);
+
+  % plant -> output
+    \draw[->] (plant.east) node[above right] {$\theta(t)$} -| ++(1.0, -1.0) -| (sum.south);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+
+\[
+  u(t) = \underbrace{k_p \cdot \varepsilon_\theta(t)}_{\text{Proportionnel}}
+        + \underbrace{k_d \cdot \frac{\mathrm{d} \varepsilon_\theta(t)}{\mathrm{d} t}}_{\text{Dérivé}}
+\]
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+\frametitle{Contrôle PD}
+\framesubtitle{Contrôleur Proportionnel}
+
+Avec $u = -k_p\,\varphi$, l'équation linéarisée devient :
+\[
+  D\,\ddot{\varphi} + c\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
+\]
+Stabilité (Routh-Hurwitz) $\Rightarrow$ $ml\,k_p > mgl$, soit :
+\[
+  k_{p,c} = g + \frac{c^2}{4mlD} \approx g \approx 9{,}81 \ \mathrm{m/s^2}
+\]
+
+% \vspace{0.2cm}
+
+\begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/kp_below.png}
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    \includegraphics[width=\linewidth]{figures/kp_above.png}
+  \end{column}
+\end{columns}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+\frametitle{Contrôle PD}
+\framesubtitle{Contrôleur Dérivatif}
+
+Expliquer comment le contrôleur derivatif modifie la dynamique du système: ça ajoute de l'amortissement.
+Ca peut être important pour le confort sur un segway par exemple.
+
+\begin{figure}
+    \includegraphics[width=0.8\linewidth]{figures/kp_kd.png}
+\end{figure}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+\frametitle{Contrôle PD}
+\framesubtitle{Résultats expérimentaux}
+
+Montrer résultats expérimentaux avec $k_p$ et $k_d$ ? Montrer que le chariot par à l'infini (aussi prédit par la simulations).
+
+Conclusion: le contrôle PD n'est pas très adapté à un système pour lequel 2 états sont à contrôler ($x$ et $theta$) mais une seule action est possible ($u = \ddot{x}$).
+
+Dans le cas du segway: $theta$ et $\dot{x}$
+Dans le cas du lanceur: $theta$ et $x$
+
+\begin{figure}
+    \only<2>{\includegraphics[width=0.8\linewidth]{figures/kp_12_kd_1_stable.png}}%
+    \only<3>{\includegraphics[width=0.8\linewidth]{figures/snapshots_simulation_kp_kd.png}}
+\end{figure}
+
+
+\end{frame}
+
+
