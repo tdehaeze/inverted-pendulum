@@ -359,23 +359,31 @@ if __name__ == "__main__":
     sim    = Simulator(plant, dt=dt)
 
     # ---- Simulations en boucle ouverte (u = 0) ----
+    # Paramètres du premier pendule (masse originale)
+    params_ol = PendulumParameters(m=0.03, l=0.15, c=0.00032)
+    plant_ol  = InvertedPendulumPlant(params_ol)
+    sim_ol    = Simulator(plant_ol, dt=dt)
     zero = lambda t, x: 0.0
 
-    for name, theta0_deg, title in [
-        ("openloop_5deg",   5,   "Boucle ouverte — θ₀ = 5° (proche position basse)"),
-        ("openloop_175deg", 175, "Boucle ouverte — θ₀ = 175° (proche position haute)"),
+    for name, theta0_deg, title, T_plot, ylim_phi in [
+        ("openloop_5deg",   5,   "Boucle ouverte — $\\theta_0 = 5°$ (position basse)",  10, None),
+        ("openloop_175deg", 175, "Boucle ouverte — $\\theta_0 = 175°$ (position haute)", 1,  (-50, 10)),
     ]:
         x0_ol = np.array([0.0, 0.0, np.deg2rad(theta0_deg), 0.0])
-        t, hist, _ = sim.simulate(zero, x0_ol, T=10)
+        t, hist, _ = sim_ol.simulate(zero, x0_ol, T=10)
 
-        theta_deg = np.rad2deg(hist[:, 2])
+        mask      = t <= T_plot
+        t_plot    = t[mask]
+        phi_deg   = np.rad2deg(hist[mask, 2]) - theta0_deg  # deviation from initial angle
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(t, theta_deg)
-        ax.axhline(theta0_deg, color='k', lw=0.5, ls='--')
-        ax.set_ylabel("Angle du pendule θ [deg]")
+        fig, ax = plt.subplots(figsize=(5, 3.5))
+        ax.plot(t_plot, phi_deg)
+        ax.axhline(0, color='k', lw=0.5, ls='--')
+        ax.set_ylabel("Angle $\\varphi$ [deg]")
         ax.set_xlabel("Temps [s]")
         ax.set_title(title)
+        if ylim_phi is not None:
+            ax.set_ylim(*ylim_phi)
         ax.grid(True)
 
         fig.tight_layout()
@@ -386,32 +394,34 @@ if __name__ == "__main__":
     # Critical proportional gain (stability threshold)
     # Derived from Routh-Hurwitz on linearised closed-loop:
     #   kp_crit = c² / (4·m·l·(I + m·l²)) + g
-    m, l, c = params.m, params.l, params.c
-    D       = params.I + m * l**2
+    # Uses original pendulum parameters (before mass additions)
+    m, l, c = params_ol.m, params_ol.l, params_ol.c
+    D       = params_ol.I + m * l**2
     kp_crit = c**2 / (4 * m * l * D) + params.g
     print(f"kp_critical = {kp_crit:.4f}")
 
     # Initial state: 5° from upright
     x0 = np.array([0.0, 0.0, np.pi + np.deg2rad(5), 0.0])
 
-    for name, kp in [("kp_below", 0.8 * kp_crit),
-                     ("kp_above", 1.2 * kp_crit)]:
+    for name, kp, T_plot, ylim in [("kp_below", 0.8 * kp_crit, 3, (0, 60)),
+                                    ("kp_above", 1.2 * kp_crit, 10, None)]:
 
         print(f"{name}: kp = {kp:.4f}")
         controller = PIDController(Kp=-kp, Kd=0, Ki=0, dt=dt)
-        t, hist, u_hist = sim.simulate(controller, x0, T=10)
+        t, hist, u_hist = sim_ol.simulate(controller, x0, T=10)
 
-        phi_deg  = np.rad2deg(hist[:, 2] - np.pi)
-        cart_mm  = hist[:, 0] * 1000
+        mask    = t <= T_plot
+        phi_deg = np.rad2deg(hist[mask, 2] - np.pi)
 
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(t, phi_deg)
+        fig, ax = plt.subplots(figsize=(5, 3.5))
+        ax.plot(t[mask], phi_deg)
         ax.axhline(0, color='k', lw=0.5, ls='--')
-        ax.set_ylabel("Angle du pendule φ [deg]")
+        ax.set_ylabel("Angle $\\varphi$ [deg]")
         ax.set_xlabel("Temps [s]")
-        ax.set_title(f"Correcteur P — kp = {kp:.3f}  "
-                     f"({'en dessous' if 'below' in name else 'au dessus'} "
-                     f"du seuil critique = {kp_crit:.3f})")
+        ax.set_title(f"$k_p = {kp:.2f}$ "
+                     f"({'$< k_{{p,c}}$' if 'below' in name else '$> k_{{p,c}}$'})")
+        if ylim is not None:
+            ax.set_ylim(*ylim)
         ax.grid(True)
 
         fig.tight_layout()
@@ -423,11 +433,11 @@ if __name__ == "__main__":
     # From b² = 4·a·k on the closed-loop characteristic equation:
     #   kd = 1/(m·l) · (2·sqrt(m·l·kp - m·g·l)·sqrt(I + m·l²) - c)
     kp = 1.2 * kp_crit
-    kd = (1 / (m * l)) * (2 * np.sqrt(m * l * kp - m * params.g * l) * np.sqrt(D) - c)
+    kd = (1 / (m * l)) * (2 * np.sqrt(m * l * kp - m * params_ol.g * l) * np.sqrt(D) - c)
     print(f"kp_kd: kp = {kp:.4f}, kd = {kd:.4f}")
 
     controller = PIDController(Kp=-kp, Kd=-kd, Ki=0, dt=dt)
-    t, hist, u_hist = sim.simulate(controller, x0, T=10)
+    t, hist, u_hist = sim_ol.simulate(controller, x0, T=10)
 
     phi_deg = np.rad2deg(hist[:, 2] - np.pi)
     cart_mm = hist[:, 0] * 1000
@@ -445,41 +455,42 @@ if __name__ == "__main__":
     plt.close(fig)
     print("  saved figs/kp_kd.png")
 
-    # LQR controller
-    q_x, q_xd, q_th, q_thd = 100, 0, 1, 0
+    # LQR controller — loop over ponderation sets
     r_u = 1
-    Q = np.diag([q_x, q_xd, q_th, q_thd])
-    R = np.array([[r_u]])
-    lqr = LQRController(plant, Q, R)
-    print(f"LQR: K = {lqr.K}")
-    print(f"     valeurs propres boucle fermée = {lqr.E}")
+    for q_x, q_xd, q_th, q_thd in [(100, 0, 1, 0), (1, 0, 100, 0)]:
+        Q = np.diag([q_x, q_xd, q_th, q_thd])
+        R = np.array([[r_u]])
+        lqr = LQRController(plant, Q, R)
+        print(f"LQR: K = {lqr.K}")
+        print(f"     valeurs propres boucle fermée = {lqr.E}")
 
-    t, hist, u_hist = sim.simulate(lqr, x0, T=10)
+        t, hist, u_hist = sim.simulate(lqr, x0, T=10)
 
-    phi_deg = np.rad2deg(hist[:, 2] - np.pi)
-    cart_mm = hist[:, 0] * 1000
+        phi_deg = np.rad2deg(hist[:, 2] - np.pi)
+        cart_mm = hist[:, 0] * 1000
 
-    fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+        fig, axes = plt.subplots(2, 1, figsize=(5, 5), sharex=True)
 
-    axes[0].plot(t, phi_deg)
-    axes[0].axhline(0, color='k', lw=0.5, ls='--')
-    axes[0].set_ylabel("Angle du pendule φ [deg]")
-    axes[0].set_title(
-        f"LQR — Q = diag({q_x}, {q_xd}, {q_th}, {q_thd}), R = {r_u}"
-        f"   K = {np.round(lqr.K[0], 3)}")
-    axes[0].grid(True)
+        axes[0].plot(t, phi_deg)
+        axes[0].axhline(0, color='k', lw=0.5, ls='--')
+        axes[0].set_ylabel("Angle $\\varphi$ [deg]")
+        axes[0].set_title(
+            f"LQR — $Q = \\mathrm{{diag}}({q_x}, {q_xd}, {q_th}, {q_thd})$, $R = {r_u}$")
+        axes[0].set_ylim(-5, 5)
+        axes[0].grid(True)
 
-    axes[1].plot(t, cart_mm)
-    axes[1].axhline(0, color='k', lw=0.5, ls='--')
-    axes[1].set_ylabel("Position du chariot [mm]")
-    axes[1].set_xlabel("Temps [s]")
-    axes[1].grid(True)
+        axes[1].plot(t, cart_mm)
+        axes[1].axhline(0, color='k', lw=0.5, ls='--')
+        axes[1].set_ylabel("Position du chariot [mm]")
+        axes[1].set_xlabel("Temps [s]")
+        axes[1].set_ylim(-200, 50)
+        axes[1].grid(True)
 
-    fig.tight_layout()
-    lqr_name = f"lqr_x{q_x}_xd{q_xd}_th{q_th}_thd{q_thd}_u{r_u}"
-    fig.savefig(f"figs/{lqr_name}.png", dpi=150)
-    plt.close(fig)
-    print(f"  saved figs/{lqr_name}.png")
+        fig.tight_layout()
+        lqr_name = f"lqr_x{q_x}_xd{q_xd}_th{q_th}_thd{q_thd}_u{r_u}"
+        fig.savefig(f"figs/{lqr_name}.png", dpi=150)
+        plt.close(fig)
+        print(f"  saved figs/{lqr_name}.png")
 
     # LQG controller
     Q_kf = np.diag([1e-2, 1e-2, 1e-2, 1e-2])   # process noise covariance
