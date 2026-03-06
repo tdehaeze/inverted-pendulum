@@ -57,7 +57,7 @@ Avec $u = -k_p\,\varphi$, l'équation linéarisée devient :
 \[
   D\,\ddot{\varphi} + c\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
 \]
-Stabilité (Routh-Hurwitz) $\Rightarrow$ $ml\,k_p > mgl$, soit :
+Stabilité (Routh-Hurwitz~\cite{routh_hurwitz}) $\Rightarrow$ $ml\,k_p > mgl$, soit :
 \[
   k_{p,c} = g + \frac{c^2}{4mlD} \approx g \approx 9{,}81 \ \mathrm{m/s^2}
 \]
@@ -81,8 +81,17 @@ Stabilité (Routh-Hurwitz) $\Rightarrow$ $ml\,k_p > mgl$, soit :
 \frametitle{Contrôle PD}
 \framesubtitle{Contrôleur Dérivatif}
 
-Expliquer comment le contrôleur derivatif modifie la dynamique du système: ça ajoute de l'amortissement.
-Ca peut être important pour le confort sur un segway par exemple.
+% Expliquer comment le contrôleur derivatif modifie la dynamique du système: ça ajoute de l'amortissement.
+% Ca peut être important pour le confort sur un segway par exemple.
+
+Avec $u = -k_p\,\varphi - k_d\,\dot{\varphi}$, l'équation linéarisée devient :
+\[
+  D\,\ddot{\varphi} + (c + ml\,k_d)\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
+\]
+Amortissement critique:
+\[
+  k_{d,c} = \frac{1}{ml}\!\left(2\sqrt{D\,(ml\,k_p - mgl)} - c\right)
+\]
 
 \begin{figure}
     \includegraphics[width=0.8\linewidth]{figures/kp_kd.png}
@@ -96,18 +105,23 @@ Ca peut être important pour le confort sur un segway par exemple.
 \frametitle{Contrôle PD}
 \framesubtitle{Résultats expérimentaux}
 
-Montrer résultats expérimentaux avec $k_p$ et $k_d$ ? Montrer que le chariot par à l'infini (aussi prédit par la simulations).
-
-Conclusion: le contrôle PD n'est pas très adapté à un système pour lequel 2 états sont à contrôler ($x$ et $theta$) mais une seule action est possible ($u = \ddot{x}$).
-
-Dans le cas du segway: $theta$ et $\dot{x}$
-Dans le cas du lanceur: $theta$ et $x$
-
 \begin{figure}
-    \only<2>{\includegraphics[width=0.8\linewidth]{figures/kp_12_kd_1_stable.png}}%
-    \only<3>{\includegraphics[width=0.8\linewidth]{figures/snapshots_simulation_kp_kd.png}}
-\end{figure}
+    \only<1>{%
+        \includegraphics[width=0.85\linewidth]{figures/kp_12_kd_1_stable_bis.png}\\[2pt]
+        {\scriptsize Résultats expérimentaux — $k_p = 12$, $k_d = 1$}
+    }%
+    \only<2>{%
+        Même comportement en simulation:
+        $\phi$ est correctement stabilisé, mais le chariot n'est pas stable.
 
+        \includegraphics[width=\linewidth]{figures/snapshots_simulation_kp_kd_1.png}\\[2pt]
+        {\scriptsize Résultats de simulation — $k_p = 12$, $k_d$}
+
+        \vspace{1em}
+
+        Pour contrôler à la fois $\phi$ et $x$, le contrôleur PD n'est pas adapté.
+    }
+\end{figure}
 
 \end{frame}
 
