@@ -65,9 +65,26 @@ Commande par retour d'état:
 \frametitle{Contrôle LQ}
 \framesubtitle{Choix de la matrice de retour d'état}
 
-Explication de la synthèse (Riccati).
-Minimisation quadratique de certains états.
-Exemple de valeurs obtenues pour une synthèse.
+Minimisation d'un critère quadratique :
+\[
+  J = \int_0^\infty \!\bigl(\mathbf{X}^\top Q\,\mathbf{X} + u^\top R\,u\bigr)\,\mathrm{d}t
+\]
+\begin{itemize}
+  \item $Q \succeq 0$ pondère les états: $Q = \mathrm{diag}(q_x,\, q_{\dot x},\, q_\varphi,\, q_{\dot\varphi})$
+  \item $R > 0$ pondère l'effort de commande
+\end{itemize}
+
+\vspace{0.3cm}
+$\mathbf{K}$ est obtenu par résolution de l'équation algébrique de Riccati :
+\[
+  A^\top P + PA - PBR^{-1}B^\top P + Q = 0
+  \ \Longrightarrow\ 
+  \boxed{\mathbf{K} = R^{-1}B^\top P}
+\]
+
+\vspace{1em}
+
+\textbf{Exemple} $q_x = 100$, $q_\varphi = 1$, $R = 1$ $\Longrightarrow$ $\mathbf{K} = \begin{bmatrix} -10.0 & -8.7 & 46.9 & 9.8 \end{bmatrix}$
 
 \end{frame}
 
@@ -80,13 +97,13 @@ Exemple de valeurs obtenues pour une synthèse.
 \begin{columns}[T]
   \begin{column}{0.5\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/lqr_x100_xd0_th1_thd0_u1.png}\\[2pt]
-    {\scriptsize Pondération forte sur $x$: $q_x = 100$, $q_\varphi = 1$}
+    \includegraphics[width=\linewidth]{figures/lqr_x1_xd0_th100_thd0_u1.png}\\[2pt]
+    {\scriptsize Pondération forte sur $\varphi$: $q_x = 1$, $q_\varphi = 100$}
   \end{column}
   \begin{column}{0.5\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/lqr_x1_xd0_th100_thd0_u1.png}\\[2pt]
-    {\scriptsize Pondération forte sur $\varphi$: $q_x = 1$, $q_\varphi = 100$}
+    \includegraphics[width=\linewidth]{figures/lqr_x100_xd0_th1_thd0_u1.png}\\[2pt]
+    {\scriptsize Pondération forte sur $x$: $q_x = 100$, $q_\varphi = 1$}
   \end{column}
 \end{columns}
 
@@ -101,7 +118,7 @@ Exemple de valeurs obtenues pour une synthèse.
 \begin{figure}
     \includegraphics[width=0.9\linewidth]{figures/data_lqr_x1000_xd0_th_1000_thd0_u1_stability.png}\\[2pt]
     
-    {\scriptsize $\mathbf{K} = [-31.6\ -23.1\ 92.8\ 18.3]$, stabilité observée de $\pm 1\,\text{deg}$, $\pm 5\,mm$}
+    {\scriptsize $\mathbf{K} = [-31.6\ -23.1\ 92.8\ 18.3]$, stabilité observée de $\pm 1\,\text{deg}$, $\pm 4\,mm$}
 \end{figure}
 
 \end{frame}

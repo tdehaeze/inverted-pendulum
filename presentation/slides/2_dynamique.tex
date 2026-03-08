@@ -20,7 +20,7 @@
 \begin{columns}[T]
 
 %--- Colonne gauche : schéma ---
-\begin{column}{0.45\textwidth}
+\begin{column}{0.4\textwidth}
 \begin{center}
 \begin{tikzpicture}[>=Stealth, scale=0.8]
 
@@ -48,10 +48,10 @@
   \draw[dashed, gray] (O) -- ++(0, -0.9);
 
   % Angle arc (CCW from downward to rod, through right side)
-    \draw[->] ($(O)+(-90:0.7)$) arc[start angle=-90, end angle=60, radius=0.7] node[near end, right] {$\theta$};
+    \draw[->, thick, red!60!black] ($(O)+(-90:0.7)$) arc[start angle=-90, end angle=60, radius=0.7] node[near end, right] {$\theta$};
 
   % Pendulum rod
-  \draw[line width=2pt] (O) -- node[midway, right=6pt] {$m,I$} (tip);
+  \draw[line width=2pt] (O) -- node[midway, right=6pt] {$m$} (tip);
 
   % Length arrow
   \draw[<->, thin]
@@ -63,7 +63,7 @@
   \fill (tip) circle [radius=0.05];
 
   % Acceleration arrow
-  \draw[->, very thick, blue!70!black]
+  \draw[->, thick, blue!60!black]
     (0.85, 0.44) -- ++(1.0, 0) node[right] {$u = \ddot{x}$};
 
 \end{tikzpicture}
@@ -71,13 +71,31 @@
 \end{column}
 
 %--- Colonne droite : équations ---
-\begin{column}{0.52\textwidth}
+\begin{column}{0.58\textwidth}
   \vspace{0.5cm}
   \textbf{Équation du mouvement :}
   \begin{equation*}
-    D\,\ddot{\theta} + c\,\dot{\theta} + mgl\sin\theta + ml\cos\theta\cdot u = 0
+      \frac{1}{3}ml^2\,\ddot{\theta} + c\,\dot{\theta} + \underbrace{mgl\sin\theta + ml\cos\theta\cdot u}_{\text{non linéaire}} = 0
   \end{equation*}
-  avec $D = I + ml^2 = \dfrac{4}{3}ml^2$
+
+
+    \only<2>{%
+
+    \vfill
+    \begin{center}
+    \begin{tcolorbox}[
+        width=0.9\linewidth,
+        colback=blue!5,
+        colframe=blue!50!black,
+        arc=4pt,
+        boxrule=1pt,
+        fontupper=\large
+    ]
+        Linéarisation pour étude de la dynamique et contrôle
+    \end{tcolorbox}
+    \end{center}
+    \vfill
+    }%
 \end{column}
 
 \end{columns}
@@ -93,27 +111,31 @@
 \begin{columns}[T]
 
 \begin{column}{0.48\textwidth}
+  \uncover<1->{%
   \centering\textbf{Position basse} ($\theta \approx 0$)
   \begin{equation*}
-    D\,\ddot{\theta} + c\,\dot{\theta} + mgl\,\theta = 0
+      \frac{1}{3}ml^2\,\ddot{\theta} + c\,\dot{\theta} + mgl\,\theta = -mlu
   \end{equation*}
   $\Rightarrow$ Oscillations amorties
 
   \begin{figure}
       \includegraphics[width=\linewidth]{figures/openloop_5deg.png}
   \end{figure}
+  }%
 \end{column}
 
 \begin{column}{0.48\textwidth}
+  \uncover<2->{%
   \centering\textbf{Position haute} ($\varphi = \theta - \pi \approx 0$)
   \begin{equation*}
-    D\,\ddot{\varphi} + c\,\dot{\varphi} - mgl\,\varphi = 0
+      \frac{1}{3}ml^2\,\ddot{\varphi} + c\,\dot{\varphi} - mgl\,\varphi = mlu
   \end{equation*}
   $\Rightarrow$ Divergence exponentielle
 
   \begin{figure}
       \includegraphics[width=\linewidth]{figures/openloop_175deg.png}
   \end{figure}
+  }%
 \end{column}
 
 \end{columns}
@@ -128,17 +150,18 @@
 
 \begin{center}
 \begin{tikzpicture}[>=Stealth,
-    box/.style={draw, rounded corners=4pt, fill=blue!8, text width=2.8cm,
+    box/.style={draw, rounded corners=4pt, fill=blue!8, text width=2.4cm,
                 align=center, minimum height=1.2cm, font=\small},
     arr/.style={->, thick, blue!60!black}
   ]
 
   \node[box] (meas) {Mesure de la\\réponse\\expérimentale};
-  \node[box, right=1.2cm of meas] (opt)  {Optimisation\\des paramètres\\du modèle};
-  \node[box, right=1.2cm of opt]  (res)  {Paramètres\\identifiés\\$m,\ l,\ c$};
-
-  \draw[arr] (meas) -- (opt);
-  \draw[arr] (opt)  -- (res);
+  \uncover<2->{%
+      \node[box, right=1.4cm of meas] (opt) {Optimisation\\des paramètres\\du modèle (Python)};
+    \node[box, right=1.0cm of opt]  (res) {Paramètres\\identifiés\\$l,\ c$};
+    \draw[arr] (meas) --node[midway, above]{Données}node[midway, below]{$m = 30\,g$} (opt);
+    \draw[arr] (opt)  -- (res);
+  }
 
 \end{tikzpicture}
 \end{center}
@@ -146,7 +169,8 @@
 \vspace{0.2cm}
 
 \begin{figure}
-    \includegraphics[width=\linewidth]{figures/free_response_fit.png}
+  \only<1>{\includegraphics[width=\linewidth]{figures/free_response_data.png}}%
+  \only<2>{\includegraphics[width=\linewidth]{figures/free_response_fit.png}}%
 \end{figure}
 
 \end{frame}

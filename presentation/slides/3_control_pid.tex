@@ -55,11 +55,11 @@
 
 Avec $u = -k_p\,\varphi$, l'équation linéarisée devient :
 \[
-  D\,\ddot{\varphi} + c\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
+    \frac{1}{3}ml^2\,\ddot{\varphi} + c\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
 \]
-Stabilité (Routh-Hurwitz~\cite{routh_hurwitz}) $\Rightarrow$ $ml\,k_p > mgl$, soit :
-\[
-  k_{p,c} = g + \frac{c^2}{4mlD} \approx g \approx 9{,}81 \ \mathrm{m/s^2}
+    Stable si $\Delta = c^2 - 4 \frac{1}{3}ml^2 \cdot (ml\,k_p - mgl) > 0$, donc si $k_p > k_{p,c}$, avec
+    \[
+    k_{p,c} = g + \frac{3 c^2}{4 m^2l^3} \approx 9.8
 \]
 
 % \vspace{0.2cm}
@@ -86,11 +86,11 @@ Stabilité (Routh-Hurwitz~\cite{routh_hurwitz}) $\Rightarrow$ $ml\,k_p > mgl$, s
 
 Avec $u = -k_p\,\varphi - k_d\,\dot{\varphi}$, l'équation linéarisée devient :
 \[
-  D\,\ddot{\varphi} + (c + ml\,k_d)\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
+    \frac{1}{3}ml^2\,\ddot{\varphi} + (c + ml\,k_d)\,\dot{\varphi} + (ml\,k_p - mgl)\,\varphi = 0
 \]
 Amortissement critique:
-\[
-  k_{d,c} = \frac{1}{ml}\!\left(2\sqrt{D\,(ml\,k_p - mgl)} - c\right)
+    \[
+    k_{d,c} = \frac{1}{ml}\!\left(2\sqrt{\frac{1}{3}ml^2\,(ml\,k_p - mgl)} - c\right) \approx 1.2
 \]
 
 \begin{figure}
@@ -105,23 +105,28 @@ Amortissement critique:
 \frametitle{Contrôle PD}
 \framesubtitle{Résultats expérimentaux}
 
-\begin{figure}
-    \only<1>{%
-        \includegraphics[width=0.85\linewidth]{figures/kp_12_kd_1_stable_bis.png}\\[2pt]
-        {\scriptsize Résultats expérimentaux — $k_p = 12$, $k_d = 1$}
+\begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+    {\scriptsize Résultats expérimentaux — $k_p = 12$, $k_d = 1$}\\
+    \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_phi.png}\\[2pt]
+    \uncover<2->{%
+        \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_x.png}%
     }%
-    \only<2>{%
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    \only<3>{%
         Même comportement en simulation:
         $\phi$ est correctement stabilisé, mais le chariot n'est pas stable.
 
         \includegraphics[width=\linewidth]{figures/snapshots_simulation_kp_kd_1.png}\\[2pt]
-        {\scriptsize Résultats de simulation — $k_p = 12$, $k_d$}
+        {\scriptsize Résultats de simulation — $k_p = 12$, $k_d = 1$}
 
         \vspace{1em}
 
         Pour contrôler à la fois $\phi$ et $x$, le contrôleur PD n'est pas adapté.
     }
-\end{figure}
+  \end{column}
+\end{columns}
 
 \end{frame}
 

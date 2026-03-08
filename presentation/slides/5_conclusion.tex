@@ -7,9 +7,23 @@
 \begin{frame}
 \frametitle{Conclusion}
 
-Conclusion du TIPE.
+\textbf{Bilan}
+\begin{itemize}
+  \item Pendule inversé sur chariot comme support d'étude du contrôle actif d'une dynamique instable
+  \item Deux stratégies de contrôle comparées :
+  \begin{itemize}
+    \item \textbf{PD} — intuitif, paramètres à sens physique clair (gain, amortissement), mais ne stabilise pas la position du chariot
+    \item \textbf{LQR} — optimal au sens d'un critère quadratique, s'appuie sur un modèle linéarisé, contrôle simultané de $\varphi$ et $x$
+  \end{itemize}
+\end{itemize}
 
-Ouverture? LQG? Explication différences modèle / expérience ? ...
+\vspace{0.4cm}
+
+\textbf{Perspectives}
+\begin{itemize}
+  \item \textbf{LQG} — ajout d'un filtre de Kalman pour l'estimation des états bruités ($\dot{x}$, $\dot{\varphi}$) ; extension naturelle du LQR
+  \item \textbf{MPC} (commande prédictive) — optimisation sur un horizon glissant, permet de prendre en compte explicitement certaines contraintes physiques
+\end{itemize}
 
 \end{frame}
 
@@ -50,3 +64,115 @@ le modèle linéarisé reproduit fidèlement la réponse libre expérimentale.
 }
 
 \end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+\frametitle{Annexe — Code}
+\framesubtitle{Identification des paramètres du modèle (\texttt{tools/fit.py})}
+
+Minimisation des moindres carrés entre simulation et mesure :
+
+\begin{lstlisting}[style=python]
+def simulate_free(t_eval, theta0, omega0, l, c, m):
+    D = (1/12)*m*(2*l)**2 + m*l**2   # = 4/3 * m * l^2
+    def ode(t, y):
+        theta, omega = y
+        return [omega, (-c*omega - m*G*l*np.sin(theta)) / D]
+    sol = solve_ivp(ode, (t_eval[0], t_eval[-1]), [theta0, omega0], t_eval=t_eval)
+    return sol.y[0]
+
+def cost(params, t, theta_meas, m):
+    l, c = params
+    theta_sim = simulate_free(t, theta_meas[0], 0.0, l, c, m)
+    return float(np.mean((theta_sim - theta_meas)**2))
+
+result = minimize(cost, [l_init, c_init], args=(t, theta, m), method="Nelder-Mead")
+l_fit, c_fit = result.x
+\end{lstlisting}
+
+\vspace{0.1cm}
+{\small Algorithme de Nelder-Mead sur les paramètres $(l, c)$, masse $m$ fixée.}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+\frametitle{Annexe — Code}
+\framesubtitle{Simulation du système (\texttt{model/inverted\_pendulum.py})}
+
+\begin{columns}[T]
+  \begin{column}{0.48\textwidth}
+    Dynamique non-linéaire :
+\begin{lstlisting}[style=python]
+def dynamics(self, state, u):
+    x, v, theta, omega = state
+    D = p.I + p.m*p.l**2
+    domega = (- p.c*omega
+         - p.m*p.g*p.l*np.sin(theta)
+         - p.m*p.l*u*np.cos(theta)) / D
+    return np.array([v, u, omega, domega])
+\end{lstlisting}
+    Intégration Euler, $dt = 1\,\text{ms}$ :
+\begin{lstlisting}[style=python]
+for k in range(N):
+    u = controller(t[k], x)
+    dx = plant.dynamics(x, u)
+    x  = x + dx * dt
+    history[k] = x
+\end{lstlisting}
+  \end{column}
+  \begin{column}{0.48\textwidth}
+    Synthèse LQR :
+\begin{lstlisting}[style=python]
+Q = np.diag([q_x, 0, q_phi, 0])
+R = np.array([[1]])
+K, P, E = control.lqr(A, B, Q, R)
+\end{lstlisting}
+    \vspace{0.2cm}
+    Contrôleur LQR :
+\begin{lstlisting}[style=python]
+def __call__(self, t, state):
+    phi_state = state.copy()
+    phi_state[2] = state[2] - np.pi
+    u = float((-self.K @ phi_state).item())
+    return u
+\end{lstlisting}
+  \end{column}
+\end{columns}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]
+\frametitle{Annexe — Code}
+\framesubtitle{Contrôleur embarqué — Teensy 4.1 (\texttt{teensy/src/main.cpp})}
+
+Boucle de contrôle à 1\,kHz via \texttt{IntervalTimer} :
+
+\begin{lstlisting}[style=cpp]
+// Convert to SI units
+float phi_rad     = (pend_deg   - theta_ref_deg) * (PI / 180.0f);
+float phi_dot_rad =  pend_vel_deg_s              * (PI / 180.0f);
+float x_m         = (cart_mm    - x_ref_mm)      / 1000.0f;
+float x_dot_m     =  cart_vel_mm_s               / 1000.0f;
+
+// Controller output [m/s^2]
+switch (ctrl_mode) {
+    case MODE_PD:
+        accel_m_s2 = -Kp * phi_rad - Kd * phi_dot_rad;  break;
+    case MODE_LQR:
+        accel_m_s2 = -(K[0]*x_m + K[1]*x_dot_m + K[2]*phi_rad + K[3]*phi_dot_rad);  break;
+}
+
+// Soft braking: block acceleration toward cart limits (+/-160 mm)
+if (cart_mm >  CART_SOFT_MM && accel_cmd > 0.0f) accel_cmd = 0.0f;
+if (cart_mm < -CART_SOFT_MM && accel_cmd < 0.0f) accel_cmd = 0.0f;
+
+cart_vel_mm_s += accel_cmd * DT;   // integrate acceleration -> velocity
+\end{lstlisting}
+
+\end{frame}
+

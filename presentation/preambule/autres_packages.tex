@@ -34,6 +34,24 @@
 \usepackage{graphicx} % inclusion des graphiques
 \usepackage{wrapfig}  % Dessins dans le texte.
 
+\usepackage{appendixnumberbeamer}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{orange!80!black},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.4pt,
+  backgroundcolor=\color{gray!6},
+  xleftmargin=4pt, xrightmargin=4pt,
+  aboveskip=4pt, belowskip=4pt,
+}
+\lstdefinestyle{python}{language=Python}
+\lstdefinestyle{cpp}{language=C++}
+
 \usepackage{tikz}     % Un package pour les dessins (utilisé pour l'environnement {code})
 \usetikzlibrary{calc, patterns, arrows.meta, positioning}
 \usepackage[framemethod=TikZ]{mdframed}
