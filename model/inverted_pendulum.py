@@ -329,18 +329,18 @@ def plot_snapshots(t, history, params, times):
         ax.plot([cart_x, px], [0, py], '-', color=color, lw=2, zorder=3)
 
         # Time label just below the cart
-        ax.text(cart_x, -cart_height / 2 - 0.01, f"t = {time:.2f} s",
-                ha='center', va='top', fontsize=8, color=color)
+        ax.text(cart_x, -cart_height / 2 - 0.01, f"t = {time:.1f} s",
+                ha='center', va='top', fontsize=14, color=color)
 
     ax.set_xlim(x_lo, x_hi)
     ax.set_ylim(y_lo, y_hi)
     ax.set_aspect('equal')
-    ax.set_xlabel("x [m]")
-    ax.tick_params(left=False, labelleft=False)
+    ax.set_xlabel("x [m]", fontsize=14)
+    ax.tick_params(left=False, labelleft=False, labelsize=12)
     for spine in ['left', 'top', 'right']:
         ax.spines[spine].set_visible(False)
 
-    fig.tight_layout()
+    fig.tight_layout(pad=0)
     return fig
 
 
@@ -365,16 +365,16 @@ if __name__ == "__main__":
     sim_ol    = Simulator(plant_ol, dt=dt)
     zero = lambda t, x: 0.0
 
-    for name, theta0_deg, title, T_plot, ylim_phi in [
-        ("openloop_5deg",   5,   "Boucle ouverte — $\\theta_0 = 5°$ (position basse)",  10, None),
-        ("openloop_175deg", 175, "Boucle ouverte — $\\theta_0 = 175°$ (position haute)", 1,  (-50, 10)),
+    for name, theta0_deg, eq_deg, title, T_plot, ylim_phi in [
+        ("openloop_5deg",   5,   0,   "Boucle ouverte — $\\theta_0 = 5°$ (position basse)",  10, None),
+        ("openloop_175deg", 175, 180, "Boucle ouverte — $\\theta_0 = 175°$ (position haute)", 1,  (-50, 10)),
     ]:
         x0_ol = np.array([0.0, 0.0, np.deg2rad(theta0_deg), 0.0])
         t, hist, _ = sim_ol.simulate(zero, x0_ol, T=10)
 
         mask      = t <= T_plot
         t_plot    = t[mask]
-        phi_deg   = np.rad2deg(hist[mask, 2]) - theta0_deg  # deviation from initial angle
+        phi_deg   = np.rad2deg(hist[mask, 2]) - eq_deg  # deviation from equilibrium
 
         fig, ax = plt.subplots(figsize=(5, 3.5))
         ax.plot(t_plot, phi_deg)
@@ -454,6 +454,13 @@ if __name__ == "__main__":
     fig.savefig("figs/kp_kd.png", dpi=150)
     plt.close(fig)
     print("  saved figs/kp_kd.png")
+
+    x0_snap = np.array([0.0, 0.0, np.pi - np.deg2rad(5), 0.0])
+    t_snap, hist_snap, _ = sim_ol.simulate(controller, x0_snap, T=10)
+    fig_snap = plot_snapshots(t_snap, hist_snap, params_ol, times=[0, 0.5, 1, 2])
+    fig_snap.savefig("figs/snapshots_simulation_kp_kd_1.png", dpi=150, bbox_inches='tight', pad_inches=0)
+    plt.close(fig_snap)
+    print("  saved figs/snapshots_simulation_kp_kd_1.png")
 
     # LQR controller — loop over ponderation sets
     r_u = 1
