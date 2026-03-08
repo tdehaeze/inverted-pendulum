@@ -152,22 +152,38 @@ def main():
     theta_fit = simulate_free(t, theta[0], 0.0, l_fit, c_fit, args.mass)
 
     # ---- Plot ----
+    basename = os.path.splitext(os.path.basename(args.csv))[0]
+    os.makedirs("figs", exist_ok=True)
+
+    # Figure 1: experimental data only
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(t, np.rad2deg(theta), lw=0.8, color="steelblue", label="Mesuré")
-    ax.plot(t, np.rad2deg(theta_fit), lw=1.5, ls="--", color="tomato",
-            label=f"Modèle ajusté  l={l_fit*100:.1f} cm, c={c_fit:.4f}")
+    ax.plot(t, np.rad2deg(theta), lw=2.0, color="steelblue", label="Mesuré")
     ax.set_xlabel("Temps [s]")
     ax.set_ylabel("Angle [deg]")
+    ax.set_ylim(-30, 30)
     ax.legend()
     ax.grid(True)
     fig.tight_layout()
-
-    basename  = os.path.splitext(os.path.basename(args.csv))[0]
-    png_path  = os.path.join("figs", basename + "_fit.png")
-    os.makedirs("figs", exist_ok=True)
-    fig.savefig(png_path, dpi=150)
+    png_data = os.path.join("figs", basename + "_data.png")
+    fig.savefig(png_data, dpi=150)
     plt.close(fig)
-    print(f"\nPlot saved → {png_path}")
+    print(f"Plot saved → {png_data}")
+
+    # Figure 2: experimental data + fit
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(t, np.rad2deg(theta), lw=2.0, color="steelblue", label="Mesuré")
+    ax.plot(t, np.rad2deg(theta_fit), lw=1.0, ls="--", color="tomato",
+            label=f"Modèle ajusté  l={2*l_fit*100:.1f} cm, c={c_fit:.5f} N·m·s/rad")
+    ax.set_xlabel("Temps [s]")
+    ax.set_ylabel("Angle [deg]")
+    ax.set_ylim(-30, 30)
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    png_fit = os.path.join("figs", basename + "_fit.png")
+    fig.savefig(png_fit, dpi=150)
+    plt.close(fig)
+    print(f"Plot saved → {png_fit}")
 
 
 if __name__ == "__main__":

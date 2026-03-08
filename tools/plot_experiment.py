@@ -78,6 +78,10 @@ def main():
                         help="Supprimer la moyenne (detrend constant) de la position chariot")
     parser.add_argument("--no-shading",  action="store_true",
                         help="Ne pas afficher les zones vertes de contrôle actif")
+    parser.add_argument("--split",       action="store_true",
+                        help="Sauvegarder deux figures séparées (_phi.png et _x.png)")
+    parser.add_argument("--zero-at-feedback", action="store_true",
+                        help="t=0 au démarrage du contrôle (au lieu du début du segment)")
     args = parser.parse_args()
 
     df = pd.read_csv(args.csv)
@@ -88,8 +92,12 @@ def main():
         margin_after = args.margin_after if args.margin_after is not None else args.margin
         seg = last_feedback_segment(df, args.margin, margin_after)
 
-    t0  = seg["t_s"].iloc[0]
-    t   = seg["t_s"].values - t0
+    if args.zero_at_feedback:
+        fb_on_idx = np.where(seg["feedback_on"].values == 1)[0]
+        t0 = seg["t_s"].iloc[fb_on_idx[0]] if len(fb_on_idx) > 0 else seg["t_s"].iloc[0]
+    else:
+        t0 = seg["t_s"].iloc[0]
+    t = seg["t_s"].values - t0
 
     phi     = seg["angle_deg"].values - args.upright
     cart_mm = seg["cart_mm"].values
@@ -135,10 +143,51 @@ def main():
 
     basename = os.path.splitext(os.path.basename(args.csv))[0]
     os.makedirs("figs", exist_ok=True)
-    out = os.path.join("figs", basename + ".png")
-    fig.savefig(out, dpi=150)
-    plt.close(fig)
-    print(f"Figure sauvegardée → {out}")
+
+    if args.split:
+        # Save phi panel alone
+        fig_phi, ax_phi = plt.subplots(figsize=(5, 2.5), tight_layout=True)
+        ax_phi.plot(t, phi, lw=1.0, color="steelblue")
+        ax_phi.axhline(0, color="k", lw=0.6, ls="--")
+        if not args.no_shading:
+            for t_a, t_b in feedback_spans(t, seg["feedback_on"].values):
+                ax_phi.axvspan(t_a, t_b, alpha=0.08, color="green", label="Contrôle actif")
+            handles, labels = ax_phi.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax_phi.legend(by_label.values(), by_label.keys(), loc="upper right", fontsize=8)
+        ax_phi.set_ylabel("Angle du pendule φ [deg]")
+        ax_phi.set_xlabel("Temps [s]")
+        if args.ylim_phi is not None:
+            ax_phi.set_ylim(-args.ylim_phi, args.ylim_phi)
+        ax_phi.grid(True)
+        out_phi = os.path.join("figs", basename + "_phi.png")
+        fig_phi.savefig(out_phi, dpi=150)
+        plt.close(fig_phi)
+        print(f"Figure sauvegardée → {out_phi}")
+
+        # Save x panel alone
+        fig_x, ax_x = plt.subplots(figsize=(5, 2.5), tight_layout=True)
+        ax_x.plot(t, cart_mm, lw=1.0, color="tomato")
+        ax_x.axhline(0, color="k", lw=0.6, ls="--")
+        if not args.no_shading:
+            for t_a, t_b in feedback_spans(t, seg["feedback_on"].values):
+                ax_x.axvspan(t_a, t_b, alpha=0.08, color="green")
+        ax_x.set_ylabel("Position du chariot [mm]")
+        ax_x.set_xlabel("Temps [s]")
+        if args.ylim_x is not None:
+            ax_x.set_ylim(-args.ylim_x, args.ylim_x)
+        ax_x.grid(True)
+        out_x = os.path.join("figs", basename + "_x.png")
+        fig_x.savefig(out_x, dpi=150)
+        plt.close(fig_x)
+        print(f"Figure sauvegardée → {out_x}")
+
+        plt.close(fig)
+    else:
+        out = os.path.join("figs", basename + ".png")
+        fig.savefig(out, dpi=150)
+        plt.close(fig)
+        print(f"Figure sauvegardée → {out}")
 
 
 if __name__ == "__main__":
