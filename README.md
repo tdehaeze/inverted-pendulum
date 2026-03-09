@@ -262,7 +262,7 @@ Enter the resulting K in the GUI under **LQR gains**, switch to **MODE LQR**.
 
 ### System identification — free oscillation response
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_identification.mp4
+<video src="movies/inverted_pendulum_identification.mp4" controls width="100%"></video>
 
 Free oscillation of the pendulum used to identify the model parameters (length $l$, friction coefficient $c$) via least-squares fitting.
 
@@ -270,7 +270,7 @@ Free oscillation of the pendulum used to identify the model parameters (length $
 
 ### PD control — stabilization
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_pd_control.mp4
+<video src="movies/inverted_pendulum_pd_control.mp4" controls width="100%"></video>
 
 Pendulum stabilized at the upright position using a PD controller. The pendulum angle is regulated but the cart drifts over time.
 
@@ -278,7 +278,7 @@ Pendulum stabilized at the upright position using a PD controller. The pendulum 
 
 ### PD control — damping only
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_damping_control.mp4
+<video src="movies/inverted_pendulum_damping_control.mp4" controls width="100%"></video>
 
 Controller acting primarily as a damper, slowing down the pendulum dynamics without full stabilization.
 
@@ -286,7 +286,7 @@ Controller acting primarily as a damper, slowing down the pendulum dynamics with
 
 ### LQR — low gain
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_lqr_low_gain.mp4
+<video src="movies/inverted_pendulum_lqr_low_gain.mp4" controls width="100%"></video>
 
 LQR with low state weighting: the controller stabilizes the pendulum with slow, smooth corrections.
 
@@ -294,7 +294,7 @@ LQR with low state weighting: the controller stabilizes the pendulum with slow, 
 
 ### LQR — high gain
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_lqr_high_gain.mp4
+<video src="movies/inverted_pendulum_lqr_high_gain.mp4" controls width="100%"></video>
 
 LQR with higher gain: faster correction of angle and cart position deviations.
 
@@ -302,7 +302,7 @@ LQR with higher gain: faster correction of angle and cart position deviations.
 
 ### LQR — higher gain (close view)
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_lqr_higher_gain_closer.mp4
+<video src="movies/inverted_pendulum_lqr_higher_gain_closer.mp4" controls width="100%"></video>
 
 Close-up view of the pendulum with higher LQR gains, showing the fast angular stabilization.
 
@@ -310,7 +310,7 @@ Close-up view of the pendulum with higher LQR gains, showing the fast angular st
 
 ### LQR — higher gain
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_lqr_higher_gain.mp4
+<video src="movies/inverted_pendulum_lqr_higher_gain.mp4" controls width="100%"></video>
 
 Wide view of the same higher-gain LQR configuration, showing simultaneous control of both angle and cart position.
 
@@ -318,6 +318,6 @@ Wide view of the same higher-gain LQR configuration, showing simultaneous contro
 
 ### LQR — changing cart position setpoint
 
-https://github.com/user-attachments/assets/movies/inverted_pendulum_lqr_change_x_setpoint.mp4
+<video src="movies/inverted_pendulum_lqr_change_x_setpoint.mp4" controls width="100%"></video>
 
 LQR controller tracking a step change in the cart position setpoint $x_\mathrm{ref}$, while keeping the pendulum upright.
