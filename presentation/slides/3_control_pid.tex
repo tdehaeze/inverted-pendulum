@@ -107,14 +107,24 @@ Amortissement critique:
 
 \begin{columns}[T]
   \begin{column}{0.48\textwidth}
-    {\scriptsize Résultats expérimentaux — $k_p = 12$, $k_d = 1$}\\
-    \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_phi.png}\\[2pt]
-    \uncover<2->{%
-        \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_x.png}%
+    % Steps 1-2: experimental plots
+    \uncover<1->{%
+      {\scriptsize Résultats expérimentaux — $k_p = 12$, $k_d = 1$}\\
+      \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_phi.png}\\[2pt]
+      \uncover<2->{%
+          \includegraphics[width=\linewidth]{figures/kp_12_kd_1_stable_bis_x.png}%
+      }%
     }%
   \end{column}
   \begin{column}{0.48\textwidth}
-    \only<3>{%
+    % Steps 3-7: photos
+    \only<3>{\includegraphics[width=0.9\linewidth]{figures/pd_control_01.png}}%
+    \only<4>{\includegraphics[width=0.9\linewidth]{figures/pd_control_02.png}}%
+    \only<5>{\includegraphics[width=0.9\linewidth]{figures/pd_control_03.png}}%
+    \only<6>{\includegraphics[width=0.9\linewidth]{figures/pd_control_04.png}}%
+    \only<7>{\includegraphics[width=0.9\linewidth]{figures/pd_control_05.png}}%
+    % Step 8: simulation
+    \only<8>{%
         Même comportement en simulation:
         $\phi$ est correctement stabilisé, mais le chariot n'est pas stable.
 
@@ -124,7 +134,7 @@ Amortissement critique:
         \vspace{1em}
 
         Pour contrôler à la fois $\phi$ et $x$, le contrôleur PD n'est pas adapté.
-    }
+    }%
   \end{column}
 \end{columns}
 

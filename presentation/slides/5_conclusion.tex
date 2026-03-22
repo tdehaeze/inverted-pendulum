@@ -67,6 +67,69 @@ le modèle linéarisé reproduit fidèlement la réponse libre expérimentale.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\begin{frame}
+\frametitle{Annexe — Équivalence LQR / PD}
+\framesubtitle{Le LQR comme double correcteur PD}
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth,
+    block/.style={draw, rectangle, rounded corners=3pt, fill=blue!8,
+                  minimum height=0.85cm, minimum width=1.7cm,
+                  align=center, font=\small},
+    plant/.style={draw, rectangle, rounded corners=3pt, fill=blue!8,
+                  minimum height=2.1cm, minimum width=1.7cm,
+                  align=center, font=\small},
+    sum/.style={draw, circle, minimum size=0.55cm, inner sep=0pt},
+  ]
+
+  \node[sum]   (sum_phi) at (0,   0.85) {};
+  \node[sum]   (sum_x)   at (0,  -0.85) {};
+  \node[block] (pd_phi)  at (2.3,  0.85) {PD$_\varphi$};
+  \node[block] (pd_x)    at (2.3, -0.85) {PD$_x$};
+  \node[sum]   (sum_u)   at (4.0,  0)    {};
+  \node[plant] (plant)   at (6.0,  0)    {Pendule\\inversé};
+
+  % +/- labels
+  \node[font=\scriptsize, above left=-5pt and 2pt of sum_phi] {$+$};
+  \node[font=\scriptsize, above left=2pt and -5pt of sum_phi] {$-$};
+  \node[font=\scriptsize, above left=-5pt and 2pt of sum_x] {$+$};
+  \node[font=\scriptsize, below left=2pt and -5pt of sum_x]   {$-$};
+  \node[font=\scriptsize, above left=2pt and -5pt of sum_u]   {$+$};
+  \node[font=\scriptsize, below left=2pt and -5pt of sum_u]   {$+$};
+
+  % References
+  \draw[->] (-1.5,  0.85) node[above right,font=\small] {$\theta_\mathrm{ref}$} -- (sum_phi.west);
+  \draw[->] (-1.5, -0.85) node[above right,font=\small] {$x_\mathrm{ref}$} -- (sum_x.west);
+
+  % Forward path
+  \draw[->] (sum_phi.east) -- node[above,font=\scriptsize] {$\varepsilon_\varphi$} (pd_phi.west);
+  \draw[->] (sum_x.east)   -- node[above,font=\scriptsize] {$\varepsilon_x$}       (pd_x.west);
+  \draw[->] (pd_phi.east)  -| (sum_u.north);
+  \draw[->] (pd_x.east)    -| (sum_u.south);
+  \draw[->] (sum_u.east)   -- node[above,font=\scriptsize] {$u = \ddot{x}$} (plant.west);
+
+  % Plant outputs
+  \coordinate (phi_out) at ($(plant.east)+(0,  0.45)$);
+  \coordinate (x_out)   at ($(plant.east)+(0, -0.45)$);
+  \draw[->] (phi_out) -- ++(0.75, 0) node[right,font=\small] {$\theta$};
+  \draw[->] (x_out)   -- ++(0.75, 0) node[right,font=\small] {$x$};
+
+  % Feedback paths (routed below the diagram)
+  \draw[->] ($(phi_out)+(0.35,0)$)node{$\bullet$} -- ++(0, 1.2) -| (sum_phi.north);
+  \draw[->] ($(x_out)+(0.35,0)$)node{$\bullet$}   -- ++(0,-1.2) -| (sum_x.south);
+  % \draw[->] ($(x_out)  +(0.35,0)$) -- ++(0,-2.3) -- ($(sum_x.south)  +(0,-2.3)$) -- (sum_x.south);
+\end{tikzpicture}
+\end{center}
+
+\vspace{1em}
+    \[u = \underbrace{-k_\varphi\,\varepsilon_\varphi - k_{\dot\varphi}\,\dot\varphi}_{\text{PD}_\varphi} \underbrace{- k_x\,\varepsilon_x - k_{\dot x}\,\dot x}_{\text{PD}_x},
+\quad\quad
+    \text{LQR}: \quad \mathbf{K} = \begin{bmatrix} k_x & k_{\dot x} & k_\varphi & k_{\dot\varphi} \end{bmatrix} \]
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{frame}[fragile]
 \frametitle{Annexe — Code}
 \framesubtitle{Identification des paramètres du modèle (\texttt{tools/fit.py})}

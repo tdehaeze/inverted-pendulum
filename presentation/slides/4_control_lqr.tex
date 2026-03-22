@@ -15,9 +15,9 @@ Modèle par représentation d'états:
             0 & 1 & 0 & 0 \\
             0 & 0 & 0 & 0 \\
             0 & 0 & 0 & 1 \\
-            0 & 0 & \tfrac{mgl}{D} & -\tfrac{c}{D}
+            0 & 0 & \tfrac{3g}{l} & -\tfrac{3c}{ml^2}
         \end{pmatrix}, \quad
-        B = \begin{pmatrix} 0 \\ 1 \\ 0 \\ \tfrac{ml}{D} \end{pmatrix}
+        B = \begin{pmatrix} 0 \\ 1 \\ 0 \\ \tfrac{3}{l} \end{pmatrix}
         \]
 
 \vspace{1em}
@@ -114,11 +114,20 @@ $\mathbf{K}$ est obtenu par résolution de l'équation algébrique de Riccati :
 \begin{frame}
 \frametitle{Contrôle LQ}
 \framesubtitle{Résultats Expérimentaux}
-
-\begin{figure}
-    \includegraphics[width=0.9\linewidth]{figures/data_lqr_x1000_xd0_th_1000_thd0_u1_stability.png}\\[2pt]
-    
-    {\scriptsize $\mathbf{K} = [-31.6\ -23.1\ 92.8\ 18.3]$, stabilité observée de $\pm 1\,\text{deg}$, $\pm 4\,mm$}
-\end{figure}
-
+\begin{columns}[T]
+  \begin{column}{0.7\textwidth}
+    \begin{figure}
+        \includegraphics[width=\linewidth]{figures/data_lqr_x1000_xd0_th_1000_thd0_u1_stability.png}\\[2pt]
+        
+        {\scriptsize $\mathbf{K} = [-31.6\ -23.1\ 92.8\ 18.3]$, stabilité observée de $\pm 1\,\text{deg}$, $\pm 4\,mm$}
+    \end{figure}
+  \end{column}
+  \begin{column}{0.3\textwidth}
+    \only<2>{\includegraphics[width=0.9\linewidth]{figures/lqr_control_01.png}}%
+    \only<3>{\includegraphics[width=0.9\linewidth]{figures/lqr_control_02.png}}%
+    \only<4>{\includegraphics[width=0.9\linewidth]{figures/lqr_control_03.png}}%
+    \only<5>{\includegraphics[width=0.9\linewidth]{figures/lqr_control_04.png}}%
+    \only<6>{\includegraphics[width=0.9\linewidth]{figures/lqr_control_05.png}}%
+  \end{column}
+\end{columns}
 \end{frame}
